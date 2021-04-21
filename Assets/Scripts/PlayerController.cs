@@ -9,11 +9,17 @@ public class PlayerController : MonoBehaviour
     private int _count;
     public Text countText;
 
+    private Touch _theTouch;
+
+    GameObject particle;
+
+
     // Start is called before the first frame update
     void Start()
     {
         _count = 0;
         CountText();
+        Debug.Log("Started");
     }
 
     // Update is called once per frame
@@ -32,6 +38,55 @@ public class PlayerController : MonoBehaviour
 
         // force makes player move around, Time.deltaTime makes movement smoother, speed will be adapted in unity editor
         GetComponent<Rigidbody>().AddForce(movement * speed * Time.deltaTime);
+
+        // Touch support
+        foreach (var touch in Input.touches)
+        {
+            if (touch.phase == TouchPhase.Began)
+            {
+                //Construct a ray from the current touch coordinates
+                Ray ray = Camera.main.ScreenPointToRay(_theTouch.position);
+                Debug.Log(ray);
+                Debug.Log(Physics.Raycast(ray));
+                if (Physics.Raycast(ray))
+                {
+                    // Create a particle if hit
+                    Instantiate(particle, transform.position, transform.rotation);
+                }
+                Vector3 jump = new Vector3(0.0f, 30, 0.0f);
+                GetComponent<Rigidbody>().AddForce(jump * speed * Time.deltaTime);
+            }
+        }
+
+        
+
+        // Accelerometer support
+
+        Vector3 dir = Vector3.zero;
+        // we assume that the device is held parrallel to the ground
+        // and the home button is in the right hand
+
+        //remap the device accelerometer axis to game coordinates:
+        // 1) XY plane of the device is mapped onto XZ plane
+        // 2) rotated 90 degrees around Y axis
+
+        dir.x = Input.acceleration.x;
+        dir.z = Input.acceleration.y;
+
+        // clamp acceleration vector to the unit sphere
+        if (dir.sqrMagnitude > 1)
+        {
+            dir.Normalize();
+        }
+
+        // Move object
+       //transform.Translate(dir * speed);      
+        
+
+        // force makes player move around, Time.deltaTime makes movement smoother, speed will be adapted in unity editor
+        GetComponent<Rigidbody>().AddForce(dir * speed * Time.deltaTime);
+
+
     }
 
     //handles collisions with objects
